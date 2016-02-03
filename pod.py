@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 """
 Use DPKT to read in a pcap file and print out the contents of the packets
 This example is focused on the fields in the Ethernet Frame and IP packet
@@ -6,6 +7,7 @@ This example is focused on the fields in the Ethernet Frame and IP packet
 import dpkt
 import datetime
 import socket
+import json
 
 def mac_addr(mac_string):
     """Print out MAC address given a string
@@ -63,38 +65,24 @@ def print_packets(pcap):
         tcp =  ip.data
 
 
-        # print 'len: ', len(tcp.data)`
-        tcp_size = len(tcp.data)
-        if tcp_size<100:
+        pkg_size = len(buf)
+        if pkg_size!=269 and pkg_size!=278:
             continue
 
         # Print out the timestamp in UTC
         # print 'Timestamp: ', str(datetime.datetime.utcfromtimestamp(timestamp))
         print 'Timestamp: ', int(timestamp)
 
-        print 'Len: ', len(tcp.data)
-        size =  len(buf)
+        print 'Len: ', pkg_size
 
-        # for x in buf[size-9:]:
-        #     # print hex(ord(x)),
-        #     print '%02x' % ord(x),
+        print ' '.join('%02x' % ord(x) for x in buf[pkg_size-9:])
 
-        # print '\n',
+        # print ''.join('%02x' % ord(x) for x in buf[size-9:])
 
-        print ' '.join('%02x' % ord(x) for x in buf[size-9:])
-
-        print ''.join('%02x' % ord(x) for x in buf[size-9:])
-
-        # print 'buf len: ', len(buf)
-        # print hex(ord(buf[size-i]))
         # Print out the info
         print 'IP: %s -> %s   (len=%d ttl=%d DF=%d MF=%d offset=%d)\n' % \
               (ip_to_str(ip.src), ip_to_str(ip.dst), ip.len, ip.ttl, do_not_fragment, more_fragments, fragment_offset)
 
-
-        # print hex(ord(tcp.data[tcp_size-1:]))
-        # print hex(int(tcp.data[tcp_size-1:],16))
-        # print int('20', 16)
         # print 'sport: %d, dport: %d' % (tcp.sport, tcp.dport)
 
 def test():
