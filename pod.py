@@ -1,24 +1,15 @@
 #!/usr/bin/env python
 
 """
-Use DPKT to read in a pcap file and print out the contents of the packets
-This example is focused on the fields in the Ethernet Frame and IP packet
 """
 import dpkt
 import datetime
 import socket
 import json
 
-def mac_addr(mac_string):
-    """Print out MAC address given a string
-
-    Args:
-        mac_string: the string representation of a MAC address
-    Returns:
-        printable MAC address
-    """
-    return ':'.join('%02x' % ord(b) for b in mac_string)
-
+def read_config():
+    with open("pod.cfg") as f:
+        return json.load(f)
 
 def ip_to_str(address):
     """Print out an IP address given a string
@@ -30,14 +21,18 @@ def ip_to_str(address):
     """
     return socket.inet_ntop(socket.AF_INET, address)
 
-def print_packets(pcap):
-    """Print out information about each packet in a pcap
+def filter_packets(pcap, config):
 
-       Args:
-           pcap: dpkt pcap reader object (dpkt.pcap.Reader)
-    """
+    cur_ts = 0
+    in_hw_ts = 0
+    in_hw_ts_str = ""
+    out_hw_ts = 0
+    out_hw_ts_str = ""
+
+    f_output = open(config["output_file"], "w") 
+
     # For each packet in the pcap process the contents
-    for timestamp, buf in pcap:
+    for ts, buf in pcap:
 
         # Unpack the Ethernet frame (mac src/dst, ethertype)
         eth = dpkt.ethernet.Ethernet(buf)
@@ -46,51 +41,65 @@ def print_packets(pcap):
         # Make sure the Ethernet frame contains an IP packet
         # EtherType (IP, ARP, PPPoE, IP6... see http://en.wikipedia.org/wiki/EtherType)
         if eth.type != dpkt.ethernet.ETH_TYPE_IP:
-            # print 'Non IP Packet type not supported %s\n' % eth.data.__class__.__name__
             continue
 
         # Now unpack the data within the Ethernet frame (the IP packet) 
         # Pulling out src, dst, length, fragment info, TTL, and Protocol
+
+        size = len(buf)
+
+        if size!=config["input"]["size"] and size!=config["output"]["size"]:
+            continue
+
+        check_sum = buf[size-1]
+
+        if ord(check_sum)!=int(config["timestamp"]["checksum"], 16):
+            continue
+
+        hw_ts_size = config["timestamp"]["size"]
+
+        hw_ts_str = ' '.join('%02x' % ord(x) for x in buf[size-hw_ts_size:])
+        hw_ts = int(''.join('%02x' % ord(x) for x in buf[size-hw_ts_size:size-1]), 16)
+
         ip = eth.data
+        ip_src = ip_to_str(ip.src)
+        ip_dst = ip_to_str(ip.dst)
 
-        # Pull out fragment information (flags and offset all packed into off field, so use bitmasks)
-        do_not_fragment = bool(ip.off & dpkt.ip.IP_DF)
-        more_fragments = bool(ip.off & dpkt.ip.IP_MF)
-        fragment_offset = ip.off & dpkt.ip.IP_OFFMASK
+        if ip_src == config["input"]["source"] and ip_dst == config["input"]["destination"]:
+            in_hw_ts = hw_ts
+            in_hw_ts_str = hw_ts_str
+            # print "input %s  ==> %d" % (in_hw_ts_str, in_hw_ts)
+        elif ip_src == config["output"]["source"] and ip_dst == config["output"]["destination"]:
+            out_hw_ts = hw_ts
+            out_hw_ts_str = hw_ts_str
+            # print "output %s ==> %d" % (out_hw_ts_str, out_hw_ts)
 
+        if cur_ts==0:
+            cur_ts = int(ts)
+        elif cur_ts==int(ts):
+            if in_hw_ts!=0 and out_hw_ts!=0:
+                f_output.write("%d\t%s\t%s\t%d\n" % (cur_ts, in_hw_ts_str, out_hw_ts_str, out_hw_ts-in_hw_ts))
+                cur_ts = 0
+                in_hw_ts = 0
+                oiut_hw_ts = 0
+        else:
+            cur_ts = 0
+            in_hw_ts = 0
+            out_hw_ts = 0
 
-        if eth.type != dpkt.ethernet.ETH_TYPE_IP:
-            continue
-
-        tcp =  ip.data
-
-
-        pkg_size = len(buf)
-        if pkg_size!=269 and pkg_size!=278:
-            continue
-
-        # Print out the timestamp in UTC
+        # Print out the ts in UTC
         # print 'Timestamp: ', str(datetime.datetime.utcfromtimestamp(timestamp))
-        print 'Timestamp: ', int(timestamp)
+        # print 'Timestamp: ', int(ts)
+        # print hw_ts
 
-        print 'Len: ', pkg_size
+def main():
+    
+    config = read_config()
 
-        print ' '.join('%02x' % ord(x) for x in buf[pkg_size-9:])
-
-        # print ''.join('%02x' % ord(x) for x in buf[size-9:])
-
-        # Print out the info
-        print 'IP: %s -> %s   (len=%d ttl=%d DF=%d MF=%d offset=%d)\n' % \
-              (ip_to_str(ip.src), ip_to_str(ip.dst), ip.len, ip.ttl, do_not_fragment, more_fragments, fragment_offset)
-
-        # print 'sport: %d, dport: %d' % (tcp.sport, tcp.dport)
-
-def test():
-    """Open up a test pcap file and print out the packets"""
-    with open('data/case_0129_1400_z.pcap') as f:
+    with open(config["data_file"]) as f:
         pcap = dpkt.pcap.Reader(f)
-        print_packets(pcap)
+        filter_packets(pcap, config)
 
 
 if __name__ == '__main__':
-    test()
+    main()
