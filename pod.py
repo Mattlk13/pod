@@ -65,6 +65,7 @@ def filter_packets(pcap, config):
         ip_src = ip_to_str(ip.src)
         ip_dst = ip_to_str(ip.dst)
 
+        is_input = True
         if ip_src == config["input"]["source"] and ip_dst == config["input"]["destination"]:
             in_hw_ts = hw_ts
             in_hw_ts_str = hw_ts_str
@@ -72,20 +73,29 @@ def filter_packets(pcap, config):
         elif ip_src == config["output"]["source"] and ip_dst == config["output"]["destination"]:
             out_hw_ts = hw_ts
             out_hw_ts_str = hw_ts_str
+            is_input = False
             # print "output %s ==> %d" % (out_hw_ts_str, out_hw_ts)
 
-        if cur_ts==0:
+        if cur_ts!=int(ts):
+
+            if cur_ts!=0:
+                print "retransmission: ", cur_ts
+
             cur_ts = int(ts)
-        elif cur_ts==int(ts):
-            if in_hw_ts!=0 and out_hw_ts!=0:
-                f_output.write("%d\t%s\t%s\t%d\n" % (cur_ts, in_hw_ts_str, out_hw_ts_str, out_hw_ts-in_hw_ts))
-                cur_ts = 0
+
+            if is_input:
+                out_hw_ts = 0
+            else:
                 in_hw_ts = 0
-                oiut_hw_ts = 0
-        else:
+
+        elif in_hw_ts!=0 and out_hw_ts!=0:
+            f_output.write("%d\t%s\t%s\t%d\n" % (cur_ts, in_hw_ts_str, out_hw_ts_str, out_hw_ts-in_hw_ts))
             cur_ts = 0
             in_hw_ts = 0
             out_hw_ts = 0
+
+            # in_hw_ts = 0
+            # out_hw_ts = 0
 
         # Print out the ts in UTC
         # print 'Timestamp: ', str(datetime.datetime.utcfromtimestamp(timestamp))
