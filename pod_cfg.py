@@ -19,11 +19,11 @@ timestamp = {
     "checksum": "0xc3"
     }
 
-config = {"data_file": "data/case_0217_1310_s.pcap", 
+config = {"data_file": "data/case_0217_1340_s.pcap", 
           "input": input_pack, 
           "output":output_pack, 
           "timestamp": timestamp, 
-          "output_file": "data/up_delay_s_0217_1310.data"}
+          "output_file": "data/up_delay_s_0217_1340.data"}
 
 with open('pod.cfg', 'w') as f:
     json.dump(config, f, sort_keys=True, indent=4)
