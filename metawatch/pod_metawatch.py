@@ -46,7 +46,7 @@ def merge(data_file):
                 exp_ts_flag = exp_ts_flag + 1
 
                 if ts_flag == 1:
-                    f_output.write('%d\t' % cur_order)
+                    f_output.write('%d' % cur_order)
                     for no in no_list:
                         f_output.write('\t%d' % no)
                     f_output.write('\t')
