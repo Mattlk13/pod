@@ -10,7 +10,7 @@ import argparse
 import os
 
 def sort(data_file):
-    cmd_sort = 'sort -k 2n,2n -k 3,3 %s > %s.sort' % (data_file, data_file)
+    cmd_sort = 'sort -k 2n,2n -k 3,3  -k 4n,4n %s > %s.sort' % (data_file, data_file)
     os.system(cmd_sort)
 
 def merge(data_file):
@@ -19,11 +19,12 @@ def merge(data_file):
     pre_order = -1
     cur_order = -1
     exp_ts_flag = 0
+    no_list = []
     ts_list = []
     with open('%s.sort' % data_file) as f:
         for line in f:
             fields = line.split()
-            # no = int(fields[0])
+            no = int(fields[0])
             order = int(fields[1])
             ts_flag = int(fields[2][1])
             ts = fields[3]
@@ -32,20 +33,27 @@ def merge(data_file):
                 pre_order = cur_order
                 cur_order = order
             
-                if len(ts_list) ==0 or len(ts_list) == 4:
+                if len(ts_list) ==0 or len(ts_list) == 2:
                     pass
                 else:
                     print("Error: order %d" % pre_order)
                     exit()
 
-            if exp_ts_flag % 4 == ts_flag:
+            if exp_ts_flag % 2 == ts_flag:
                 ts_list.append(ts)
+                no_list.append(no)
+                
                 exp_ts_flag = exp_ts_flag + 1
 
-                if ts_flag == 3:
+                if ts_flag == 1:
+                    f_output.write('%d\t' % cur_order)
+                    for no in no_list:
+                        f_output.write('\t%d' % no)
+                    f_output.write('\t')
                     f_output.write('\t'.join(ts_list))
                     f_output.write('\n')
                     ts_list = []
+                    no_list = []
             # if exp_ts_flag == ts_flag:
             #     f_output.write('%s' % ts)
         f.close
@@ -125,75 +133,75 @@ def filter_packets(pcap, config):
             ts = 't1'
             order_local_id = int(''.join('%s' % chr(ord(x)) for x in buf[size-59:size-46]), 10)
             # print("No %d - t1 order_local_id = %d" % (no, order_local_id))
-        elif ord(source) == config["t2"]["source"] \
-            and ip_src == config["t2"]["src_ip"] \
-            and ip_dst == config["t2"]["dst_ip"] \
-            and port_src == config["t2"]["src_port"] \
-            and size in config["t2"]["size"]:
+        # elif ord(source) == config["t2"]["source"] \
+        #     and ip_src == config["t2"]["src_ip"] \
+        #     and ip_dst == config["t2"]["dst_ip"] \
+        #     and port_src == config["t2"]["src_port"] \
+        #     and size in config["t2"]["size"]:
     
-            ts = 't2'
-            if size == 320:
-                pre_local_id = int(''.join('%s' % chr(ord(x)) for x in buf[size-153:size-140]), 10)
-                f_output.write('%d\t%d\t%s\t%d.%09d\n' % (no, pre_local_id, ts, hw_second, hw_ns))
+        #     ts = 't2'
+        #     if size == 320:
+        #         pre_local_id = int(''.join('%s' % chr(ord(x)) for x in buf[size-153:size-140]), 10)
+        #         f_output.write('%d\t%d\t%s\t%d.%09d\n' % (no, pre_local_id, ts, hw_second, hw_ns))
 
-            if size == 324:
-                pre_local_id = int(''.join('%s' % chr(ord(x)) for x in buf[size-155:size-142]), 10)
-                f_output.write('%d\t%d\t%s\t%d.%09d\n' % (no, pre_local_id, ts, hw_second, hw_ns))
+        #     if size == 324:
+        #         pre_local_id = int(''.join('%s' % chr(ord(x)) for x in buf[size-155:size-142]), 10)
+        #         f_output.write('%d\t%d\t%s\t%d.%09d\n' % (no, pre_local_id, ts, hw_second, hw_ns))
             
-            if size == 328 or size == 451 \
-                or size == 574:
-                pre_local_id = int(''.join('%s' % chr(ord(x)) for x in buf[size-157:size-144]), 10)
-                f_output.write('%d\t%d\t%s\t%d.%09d\n' % (no, pre_local_id, ts, hw_second, hw_ns))
+        #     if size == 328 or size == 451 \
+        #         or size == 574:
+        #         pre_local_id = int(''.join('%s' % chr(ord(x)) for x in buf[size-157:size-144]), 10)
+        #         f_output.write('%d\t%d\t%s\t%d.%09d\n' % (no, pre_local_id, ts, hw_second, hw_ns))
             
-            if size == 330:
-                pre_local_id = int(''.join('%s' % chr(ord(x)) for x in buf[size-159:size-146]), 10)
-                f_output.write('%d\t%d\t%s\t%d.%09d\n' % (no, pre_local_id, ts, hw_second, hw_ns))
+        #     if size == 330:
+        #         pre_local_id = int(''.join('%s' % chr(ord(x)) for x in buf[size-159:size-146]), 10)
+        #         f_output.write('%d\t%d\t%s\t%d.%09d\n' % (no, pre_local_id, ts, hw_second, hw_ns))
             
-            if size == 451 or size == 574:
-                pre_local_id = int(''.join('%s' % chr(ord(x)) for x in buf[size-280:size-267]), 10)
-                f_output.write('%d\t%d\t%s\t%d.%09d\n' % (no, pre_local_id, ts, hw_second, hw_ns))
+        #     if size == 451 or size == 574:
+        #         pre_local_id = int(''.join('%s' % chr(ord(x)) for x in buf[size-280:size-267]), 10)
+        #         f_output.write('%d\t%d\t%s\t%d.%09d\n' % (no, pre_local_id, ts, hw_second, hw_ns))
             
-            if size == 574:
-                pre_local_id = int(''.join('%s' % chr(ord(x)) for x in buf[size-403:size-390]), 10)
-                f_output.write('%d\t%d\t%s\t%d.%09d\n' % (no, pre_local_id, ts, hw_second, hw_ns))
+        #     if size == 574:
+        #         pre_local_id = int(''.join('%s' % chr(ord(x)) for x in buf[size-403:size-390]), 10)
+        #         f_output.write('%d\t%d\t%s\t%d.%09d\n' % (no, pre_local_id, ts, hw_second, hw_ns))
             
-            order_local_id = int(''.join('%s' % chr(ord(x)) for x in buf[size-34:size-21]), 10)
+        #     order_local_id = int(''.join('%s' % chr(ord(x)) for x in buf[size-34:size-21]), 10)
             
-            # if size == 328:
-            #     print('size is 328, no is %d' % no)
-            # elif size == 194:
-            #     order_local_id = int(''.join('%s' % chr(ord(x)) for x in buf[size-32:size-19]), 10)
+        #     # if size == 328:
+        #     #     print('size is 328, no is %d' % no)
+        #     # elif size == 194:
+        #     #     order_local_id = int(''.join('%s' % chr(ord(x)) for x in buf[size-32:size-19]), 10)
             
-            # print("No %d - t2 order_local_id = %d" % (no, order_local_id))
-        elif ord(source) == config["t3"]["source"] \
-            and ip_src == config["t3"]["src_ip"] \
-            and ip_dst == config["t3"]["dst_ip"] \
-            and port_src == config["t3"]["src_port"] \
-            and size in config["t3"]["size"]:
-            # f_output.write('\t%d.%09d\n' % (hw_second, hw_ns))
-            ts = 't3'
+        #     # print("No %d - t2 order_local_id = %d" % (no, order_local_id))
+        # elif ord(source) == config["t3"]["source"] \
+        #     and ip_src == config["t3"]["src_ip"] \
+        #     and ip_dst == config["t3"]["dst_ip"] \
+        #     and port_src == config["t3"]["src_port"] \
+        #     and size in config["t3"]["size"]:
+        #     # f_output.write('\t%d.%09d\n' % (hw_second, hw_ns))
+        #     ts = 't3'
 
-            if size == 418:
-                pre_local_id = int(''.join('%s' % chr(ord(x)) for x in buf[size-295:size-275]), 10)
-                f_output.write('%d\t%d\t%s\t%d.%09d\n' % (no, pre_local_id, ts, hw_second, hw_ns))
+        #     if size == 418:
+        #         pre_local_id = int(''.join('%s' % chr(ord(x)) for x in buf[size-295:size-275]), 10)
+        #         f_output.write('%d\t%d\t%s\t%d.%09d\n' % (no, pre_local_id, ts, hw_second, hw_ns))
 
-            if size == 420:
-                pre_local_id = int(''.join('%s' % chr(ord(x)) for x in buf[size-296:size-276]), 10)
-                f_output.write('%d\t%d\t%s\t%d.%09d\n' % (no, pre_local_id, ts, hw_second, hw_ns))
+        #     if size == 420:
+        #         pre_local_id = int(''.join('%s' % chr(ord(x)) for x in buf[size-296:size-276]), 10)
+        #         f_output.write('%d\t%d\t%s\t%d.%09d\n' % (no, pre_local_id, ts, hw_second, hw_ns))
             
-            if size == 426:
-                pre_local_id = int(''.join('%s' % chr(ord(x)) for x in buf[size-299:size-279]), 10)
-                f_output.write('%d\t%d\t%s\t%d.%09d\n' % (no, pre_local_id, ts, hw_second, hw_ns))
+        #     if size == 426:
+        #         pre_local_id = int(''.join('%s' % chr(ord(x)) for x in buf[size-299:size-279]), 10)
+        #         f_output.write('%d\t%d\t%s\t%d.%09d\n' % (no, pre_local_id, ts, hw_second, hw_ns))
 
-            if size == 139 or size == 242:
-                order_local_id = int(''.join('%s' % chr(ord(x)) for x in buf[size-116:size-96]), 10)
-            elif size == 249 or size == 250 \
-                or size == 251 \
-                or size == 252 or size == 253 \
-                or size == 254 \
-                or size == 418 or size == 420 \
-                or size == 426:
-                order_local_id = int(''.join('%s' % chr(ord(x)) for x in buf[size-127:size-107]), 10)
+        #     if size == 139 or size == 242:
+        #         order_local_id = int(''.join('%s' % chr(ord(x)) for x in buf[size-116:size-96]), 10)
+        #     elif size == 249 or size == 250 \
+        #         or size == 251 \
+        #         or size == 252 or size == 253 \
+        #         or size == 254 \
+        #         or size == 418 or size == 420 \
+        #         or size == 426:
+        #         order_local_id = int(''.join('%s' % chr(ord(x)) for x in buf[size-127:size-107]), 10)
             
             # print("No %d - t3 order_local_id = %d" % (no, order_local_id))
         else:
