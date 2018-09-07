@@ -104,10 +104,8 @@ def filter_packets(pcap, config):
         ip_dst = ip_to_str(ip.dst)
 
         tcp = ip.data
-        port_src = tcp.sport
+        # port_src = tcp.sport
         port_dst = tcp.dport
-
-        
 
         # metamako_ts_str = ' '.join('%02x' % ord(x) for x in buf[size-16:])
         hw_second = int(''.join('%02x' % ord(x) for x in buf[size-12:size-8]), 16)
@@ -117,21 +115,56 @@ def filter_packets(pcap, config):
             and ip_src == config["t0"]["src_ip"] \
             and ip_dst == config["t0"]["dst_ip"] \
             and port_dst == config["t0"]["dst_port"] \
-            and size in config["t0"]["size"]:
+            and size >= config["t0"]["size"]:
             
             ts = 't0'
-            order_local_id = int(''.join('%s' % chr(ord(x)) for x in buf[size-181:size-161]), 10)
+
+            # print(' '.join('%02x' % ord(x) for x in buf[68:70]))
+            pkg_size = int(''.join('%02x' % ord(x) for x in buf[68:70]), 16)
+            # print('pkg_size %d' % pkg_size)
+
+            if pkg_size != 314:
+                continue
+
+            position = size - 181
+            # 195 = 318 + 4 + 54 - 181
+            while position >= 195:
+                order_local_id = int(''.join('%s' % chr(ord(x)) for x in buf[position:position+20]), 10)
+                f_output.write('%d\t%d\t%s\t%d.%09d\n' % (no, order_local_id, ts, hw_second, hw_ns))
+                position = position - 318
+        
             # print("No %d - t0 order_local_id = %d" % (no,order_local_id))
             # print("%d => %d" % (port_src, port_dst))
         elif ord(source) == config["t1"]["source"] \
             and ip_src == config["t1"]["src_ip"] \
             and ip_dst == config["t1"]["dst_ip"] \
             and port_dst == config["t1"]["dst_port"] \
-            and size in config["t1"]["size"]:
+            and size >= config["t1"]["size"]:
             # f_output.write('\t%d.%09d\n' % (hw_second, hw_ns))
             
             ts = 't1'
-            order_local_id = int(''.join('%s' % chr(ord(x)) for x in buf[size-59:size-46]), 10)
+
+            if size == 297:
+                pkg_size = int(''.join('%02x' % ord(x) for x in buf[80:82]), 16)
+            else:
+                pkg_size = int(''.join('%02x' % ord(x) for x in buf[68:70]), 16)
+            
+            if pkg_size != 199:
+                continue
+            
+            position = size - 59
+            # 202 = 203 + 4 + 54 - 59
+            while position >= 202:
+                order_local_id = int(''.join('%s' % chr(ord(x)) for x in buf[position:position+13]), 10)
+                f_output.write('%d\t%d\t%s\t%d.%09d\n' % (no, order_local_id, ts, hw_second, hw_ns))
+                position = position - 203
+            # if size == 488:
+            #     pre_local_id = int(''.join('%s' % chr(ord(x)) for x in buf[size-262:size-249]), 10)
+            #     f_output.write('%d\t%d\t%s\t%d.%09d\n' % (no, pre_local_id, ts, hw_second, hw_ns))
+            
+            # order_local_id = int(''.join('%s' % chr(ord(x)) for x in buf[size-59:size-46]), 10)
+
+            # order_local_id = order_local_id - config["t1"]["order_delta"]
             # print("No %d - t1 order_local_id = %d" % (no, order_local_id))
         # elif ord(source) == config["t2"]["source"] \
         #     and ip_src == config["t2"]["src_ip"] \
@@ -207,7 +240,7 @@ def filter_packets(pcap, config):
         else:
             continue
         
-        f_output.write('%d\t%d\t%s\t%d.%09d\n' % (no, order_local_id, ts, hw_second, hw_ns))
+        # f_output.write('%d\t%d\t%s\t%d.%09d\n' % (no, order_local_id, ts, hw_second, hw_ns))
         
 
         # Print out the ts in UTC
