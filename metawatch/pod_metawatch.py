@@ -156,6 +156,7 @@ def filter_packets(pcap, config):
             # 202 = 203 + 4 + 54 - 59
             while position >= 202:
                 order_local_id = int(''.join('%s' % chr(ord(x)) for x in buf[position:position+13]), 10)
+                order_local_id = order_local_id - config["t1"]["order_delta"]
                 f_output.write('%d\t%d\t%s\t%d.%09d\n' % (no, order_local_id, ts, hw_second, hw_ns))
                 position = position - 203
             # if size == 488:
@@ -164,7 +165,7 @@ def filter_packets(pcap, config):
             
             # order_local_id = int(''.join('%s' % chr(ord(x)) for x in buf[size-59:size-46]), 10)
 
-            # order_local_id = order_local_id - config["t1"]["order_delta"]
+            
             # print("No %d - t1 order_local_id = %d" % (no, order_local_id))
         # elif ord(source) == config["t2"]["source"] \
         #     and ip_src == config["t2"]["src_ip"] \
