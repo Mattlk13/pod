@@ -8,6 +8,7 @@ import socket
 import json
 import argparse
 import os
+import math
 
 def sort(data_file):
     cmd_sort = 'sort -k 2n,2n -k 3,3  -k 4n,4n %s > %s.sort' % (data_file, data_file)
@@ -94,7 +95,6 @@ def filter_packets(pcap, config):
         # Pulling out src, dst, length, fragment info, TTL, and Protocol
 
         size = len(buf)
-        source = buf[size-1]
         
         ip = eth.data
         if ip.p != dpkt.ip.IP_PROTO_TCP:
@@ -107,9 +107,26 @@ def filter_packets(pcap, config):
         # port_src = tcp.sport
         port_dst = tcp.dport
 
-        # metamako_ts_str = ' '.join('%02x' % ord(x) for x in buf[size-16:])
-        hw_second = int(''.join('%02x' % ord(x) for x in buf[size-12:size-8]), 16)
-        hw_ns = int(''.join('%02x' % ord(x) for x in buf[size-8:size-4]), 16)
+        if config["ts_format"] == "metawatch":
+            source = buf[size-1]
+            
+            # metamako_ts_str = ' '.join('%02x' % ord(x) for x in buf[size-16:])
+            hw_second = int(''.join('%02x' % ord(x) for x in buf[size-12:size-8]), 16)
+            hw_ns = int(''.join('%02x' % ord(x) for x in buf[size-8:size-4]), 16)
+        elif config["ts_format"] == "hpt":
+            # hpt_ts_str = ' '.join('%02x' % ord(x) for x in buf[size-10:size-1])
+            # print ('hpt_ts_str:%s' % hpt_ts_str)
+            source = buf[size-11]
+            
+            hw_second = int(''.join('%02x' % ord(x) for x in buf[size-10:size-6]), 16)
+            hw_ns = int(''.join('%02x' % ord(x) for x in buf[size-6:size-1]), 16)
+            # print('before: hw_ns %d' % hw_ns)
+            hw_ns = int(hw_ns * 2**-40 * 10**9)
+            # print('after: hw_ns %d' % hw_ns)
+            # break
+        else:
+            print("The ts_format %s is not be supported." % config["ts_format"])
+            break
         
         if ord(source) == config["t0"]["source"] \
             and ip_src == config["t0"]["src_ip"] \
