@@ -67,11 +67,11 @@ def filter_packets(pcap):
 
         frac_seconds_hex_dump = ' '.join('%02x' % ord(x) for x in exablaze_ts_trailer[10:15])
         frac_seconds = int(''.join('%02x' % ord(x) for x in exablaze_ts_trailer[10:15]), 16)
-        frac_nano_seconds = frac_seconds * 2**-40 * 10**9
+        nanoseconds = frac_seconds * 2**-40 * 10**9
         dict_frac_seconds = {}
         dict_frac_seconds["dec"] = frac_seconds
         dict_frac_seconds["hex"] = frac_seconds_hex_dump
-        dict_frac_seconds["nao_second"] = frac_nano_seconds
+        dict_frac_seconds["nanoseconds"] = nanoseconds
         dict_exablaze_ts_trailer["frac_seconds"] = dict_frac_seconds
 
         _reserved = exablaze_ts_trailer[15]

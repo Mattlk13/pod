@@ -54,13 +54,13 @@ def filter_packets(pcap):
         dict_seconds_since_epoch["dec"] = seconds_since_epoch
         dict_metamako_ts_trailer["seconds_since_epoch"] = dict_seconds_since_epoch
 
-        nano_seconds_hex_dump = ' '.join('%02x' % ord(x) for x in metawatch_ts_trailer[8:12])
-        nano_seconds = int(''.join('%02x' % ord(x) for x in metawatch_ts_trailer[8:12]), 16)
-        # print('nano_seconds %d <==> %s' % (nano_seconds, nano_seconds_hex_dump))
-        dict_nano_seconds = {}
-        dict_nano_seconds["dec"] = nano_seconds
-        dict_nano_seconds["hex"] = nano_seconds_hex_dump
-        dict_metamako_ts_trailer["nano_seconds"] = dict_nano_seconds
+        nanoseconds_hex_dump = ' '.join('%02x' % ord(x) for x in metawatch_ts_trailer[8:12])
+        nanoseconds = int(''.join('%02x' % ord(x) for x in metawatch_ts_trailer[8:12]), 16)
+        # print('nanoseconds %d <==> %s' % (nanoseconds, nanoseconds_hex_dump))
+        dict_nanoseconds = {}
+        dict_nanoseconds["dec"] = nanoseconds
+        dict_nanoseconds["hex"] = nanoseconds_hex_dump
+        dict_metamako_ts_trailer["nanoseconds"] = dict_nanoseconds
 
         flags = metawatch_ts_trailer[12]
         # print('flags: %d <==> %02x' % (ord(flags), ord(flags)))
