@@ -39,10 +39,10 @@ def filter_packets(pcap):
         print('original_fcs: %s' % original_fcs)
 
         device_id = exablaze_ts_trailer[4]
-        print('device_id: %02x' % ord(device_id))
+        print('device_id: %d <==> %02x' % (ord(device_id), ord(device_id)))
 
         port = exablaze_ts_trailer[5]
-        print('port: %02x' % ord(port))
+        print('port: %d <==> %02x' % (ord(port), ord(port)))
 
         seconds_since_epoch_hex_dump = ' '.join('%02x' % ord(x) for x in exablaze_ts_trailer[6:10])
         seconds_since_epoch = int(''.join('%02x' % ord(x) for x in exablaze_ts_trailer[6:10]), 16)
@@ -51,7 +51,7 @@ def filter_packets(pcap):
         frac_seconds_hex_dump = ' '.join('%02x' % ord(x) for x in exablaze_ts_trailer[10:15])
         frac_seconds = int(''.join('%02x' % ord(x) for x in exablaze_ts_trailer[10:15]), 16)
         frac_nano_seconds = frac_seconds * 2**-40 * 10**9
-        print('frac_seconds %d <==> %s ==> %d(ns)' % (frac_seconds, frac_seconds_hex_dump, frac_nano_seconds))
+        print('frac_seconds %d <==> %s ==> %09d(ns)' % (frac_seconds, frac_seconds_hex_dump, frac_nano_seconds))
 
         _reserved = exablaze_ts_trailer[15]
         print('_reserved: %02x' % ord(_reserved))
