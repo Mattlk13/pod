@@ -91,54 +91,59 @@ def filter_packets(pcap, config):
                 dict_ftdc = {}
                 if content_length > 0:
                     ftdc = payload[index : index + content_length]
-                    # ftdc_hex_dump = ' '.join('%02x' % ord(x) for x in ftdc)
+                    ftdc_hex_dump = ' '.join('%02x' % ord(x) for x in ftdc)
                     index += content_length
-                    # dict_ftdc["hex"] = ftdc_hex_dump
+                    dict_ftdc["hex"] = ftdc_hex_dump
+
+                    # compressor LZ77
+                    # uncompress_ftdc = LZ77(6).compress(list(ftdc))
+                    # uncompress_ftdc_hex_dump = ' '.join('%02x' % ord(x) for x in uncompress_ftdc)
+                    # dict_ftdc["uncom_hex"] = uncompress_ftdc_hex_dump
 
                     # ftdc_head
-                    ftdc_head = ftdc[0:16]
-                    ftdc_head_hex_dump = ' '.join('%02x' % ord(x) for x in ftdc_head)
+                    # ftdc_head = ftdc[0:16]
+                    # ftdc_head_hex_dump = ' '.join('%02x' % ord(x) for x in ftdc_head)
 
-                    version = ord(ftdc_head[0])
-                    trasaction_id = int(''.join('%02x' % ord(x) for x in ftdc_head[1:5]), 16)
-                    chain = ord(ftdc_head[5])
-                    sequence_series = int(''.join('%02x' % ord(x) for x in ftdc_head[6:8]), 16)
-                    sequence_number = int(''.join('%02x' % ord(x) for x in ftdc_head[8:12]), 16)
-                    field_count = int(''.join('%02x' % ord(x) for x in ftdc_head[12:14]), 16)
-                    ftdc_content_length = int(''.join('%02x' % ord(x) for x in ftdc_head[14:16]), 16)
+                    # version = ord(ftdc_head[0])
+                    # trasaction_id = int(''.join('%02x' % ord(x) for x in ftdc_head[1:5]), 16)
+                    # chain = ord(ftdc_head[5])
+                    # sequence_series = int(''.join('%02x' % ord(x) for x in ftdc_head[6:8]), 16)
+                    # sequence_number = int(''.join('%02x' % ord(x) for x in ftdc_head[8:12]), 16)
+                    # field_count = int(''.join('%02x' % ord(x) for x in ftdc_head[12:14]), 16)
+                    # ftdc_content_length = int(''.join('%02x' % ord(x) for x in ftdc_head[14:16]), 16)
 
-                    dict_ftdc_head = {
-                        "hex": ftdc_head_hex_dump,
-                        "version": version,
-                        "trasaction_id": trasaction_id,
-                        "chain": chain,
-                        "sequence_series": sequence_series,
-                        "sequence_number": sequence_number,
-                        "field_count": field_count,
-                        "ftdc_content_length": ftdc_content_length
-                    }
+                    # dict_ftdc_head = {
+                    #     "hex": ftdc_head_hex_dump,
+                    #     "version": version,
+                    #     "trasaction_id": trasaction_id,
+                    #     "chain": chain,
+                    #     "sequence_series": sequence_series,
+                    #     "sequence_number": sequence_number,
+                    #     "field_count": field_count,
+                    #     "ftdc_content_length": ftdc_content_length
+                    # }
 
-                    dict_ftdc["head"] = dict_ftdc_head
-                    dict_ftdc["fields"] = []
+                    # dict_ftdc["head"] = dict_ftdc_head
+                    # dict_ftdc["fields"] = []
                     
-                    i_ftdc = 16
-                    while i_ftdc < len(ftdc):
-                        field_id = int(''.join('%02x' % ord(x) for x in ftdc[i_ftdc:i_ftdc + 4]), 16)
-                        i_ftdc += 4
+                    # i_ftdc = 16
+                    # while i_ftdc < len(ftdc):
+                    #     field_id = int(''.join('%02x' % ord(x) for x in ftdc[i_ftdc:i_ftdc + 4]), 16)
+                    #     i_ftdc += 4
 
-                        field_length = int(''.join('%02x' % ord(x) for x in ftdc[i_ftdc:i_ftdc + 2]), 16)
-                        i_ftdc += 2
+                    #     field_length = int(''.join('%02x' % ord(x) for x in ftdc[i_ftdc:i_ftdc + 2]), 16)
+                    #     i_ftdc += 2
 
-                        field_data = ' '.join('%02x' % ord(x) for x in ftdc[i_ftdc:i_ftdc + field_length])
-                        i_ftdc += field_length
+                    #     field_data = ' '.join('%02x' % ord(x) for x in ftdc[i_ftdc:i_ftdc + field_length])
+                    #     i_ftdc += field_length
 
-                        dict_field = {
-                            "id": field_id,
-                            "length": field_length,
-                            "data": field_data
-                        }
+                    #     dict_field = {
+                    #         "id": field_id,
+                    #         "length": field_length,
+                    #         "data": field_data
+                    #     }
 
-                        dict_ftdc["fields"].append({"field": dict_field})
+                    #     dict_ftdc["fields"].append({"field": dict_field})
                 
                 dict_ftd = {
                     "head": dict_ftd_head,
