@@ -83,7 +83,7 @@ def filter_packets(pcap):
         json.dump(dict_ts_trailer, sys.stdout, sort_keys=True, indent=4)
         print('')
 
-        # break
+        break
         
 def main():
     

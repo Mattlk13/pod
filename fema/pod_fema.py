@@ -103,10 +103,21 @@ def filter_packets(pcap, config):
         ip_src = ip_to_str(ip.src)
         ip_dst = ip_to_str(ip.dst)
 
+        ip_hdr_len = ip.hl * 4
+        ip_len = ip.len
+
         tcp = ip.data
         # port_src = tcp.sport
         port_dst = tcp.dport
-
+        tcp_hdr_len = tcp.off * 4
+        tcp_payload_len = ip_len - ip_hdr_len - tcp_hdr_len
+        paylod_position = 14 + ip_hdr_len + tcp_hdr_len
+        
+        # print('ip_hdr_len %d, ip_len %d' % (ip_hdr_len, ip_len))
+        # print('tcp_hdr_len %d, tcp_payload_len %d' % (tcp_hdr_len, tcp_payload_len))
+        # print('no %d' % no)
+        # exit(-1)
+        
         if config["ts_format"] == "metawatch":
             source = buf[size-1]
             
@@ -160,22 +171,28 @@ def filter_packets(pcap, config):
             # f_output.write('\t%d.%09d\n' % (hw_second, hw_ns))
             
             ts = 't1'
-
-            if size == 297:
-                pkg_size = int(''.join('%02x' % ord(x) for x in buf[80:82]), 16)
-            else:
-                pkg_size = int(''.join('%02x' % ord(x) for x in buf[68:70]), 16)
+            # paylod_position += 2
+            pkg_size = int(''.join('%02x' % ord(x) for x in buf[paylod_position + 2 : paylod_position + 4]), 16)
+            # if size == 297:
+            #     pkg_size = int(''.join('%02x' % ord(x) for x in buf[80:82]), 16)
+            # else:
+            #     pkg_size = int(''.join('%02x' % ord(x) for x in buf[68:70]), 16)
             
-            if pkg_size != 199:
+            # print('paylod_position %d' % paylod_position)
+            # print('pkg_size %d' % pkg_size)
+            # exit(-1)
+            
+            if pkg_size != 199 and pkg_size != 236:
                 continue
             
-            position = size - 59
+            # paylod_position += 161
+            # position = size - 59
             # 202 = 203 + 4 + 54 - 59
-            while position >= 202:
-                order_local_id = int(''.join('%s' % chr(ord(x)) for x in buf[position:position+13]), 10)
+            while paylod_position + 160 < ip_len:
+                order_local_id = int(''.join('%s' % chr(ord(x)) for x in buf[paylod_position + 160:paylod_position + 160 +13]), 10)
                 order_local_id = order_local_id - config["t1"]["order_delta"]
                 f_output.write('%d\t%d\t%s\t%d.%09d\n' % (no, order_local_id, ts, hw_second, hw_ns))
-                position = position - 203
+                paylod_position += pkg_size + 4
             # if size == 488:
             #     pre_local_id = int(''.join('%s' % chr(ord(x)) for x in buf[size-262:size-249]), 10)
             #     f_output.write('%d\t%d\t%s\t%d.%09d\n' % (no, pre_local_id, ts, hw_second, hw_ns))
