@@ -38,13 +38,16 @@ def merge(data_file):
                     pass
                 else:
                     print("Error: order %d" % pre_order)
-                    exit()
+                    # exit()
+                    ts_list = []
+                    no_list = []
+                    exp_ts_flag = ts_flag
 
             if exp_ts_flag % 2 == ts_flag:
                 ts_list.append(ts)
                 no_list.append(no)
                 
-                exp_ts_flag = exp_ts_flag + 1
+                exp_ts_flag = ts_flag + 1
 
                 if ts_flag == 1:
                     f_output.write('%d' % cur_order)
@@ -139,8 +142,8 @@ def filter_packets(pcap, config):
             print("The ts_format %s is not be supported." % config["ts_format"])
             break
         
-        if ord(source) == config["t0"]["source"] \
-            and ip_src == config["t0"]["src_ip"] \
+        # ord(source) == config["t0"]["source"]
+        if  ip_src == config["t0"]["src_ip"] \
             and ip_dst == config["t0"]["dst_ip"] \
             and port_dst == config["t0"]["dst_port"] \
             and size >= config["t0"]["size"]:
@@ -163,8 +166,8 @@ def filter_packets(pcap, config):
         
             # print("No %d - t0 order_local_id = %d" % (no,order_local_id))
             # print("%d => %d" % (port_src, port_dst))
-        elif ord(source) == config["t1"]["source"] \
-            and ip_src == config["t1"]["src_ip"] \
+            # ord(source) == config["t1"]["source"]
+        elif ip_src == config["t1"]["src_ip"] \
             and ip_dst == config["t1"]["dst_ip"] \
             and port_dst == config["t1"]["dst_port"] \
             and size >= config["t1"]["size"]:
